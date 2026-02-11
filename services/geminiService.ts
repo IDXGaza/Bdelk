@@ -1,8 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { ProductInfo, BoycottNews, Alternative } from "../types";
+import { ProductInfo, BoycottNews, Alternative } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
 
 const PRODUCT_ITEM_SCHEMA = {
   type: Type.OBJECT,

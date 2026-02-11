@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { identifyAndCheckProduct, checkLatestBoycottNews, fetchMoreProducts, fetchMoreAlternatives } from './services/geminiService';
-import { AppState, ProductInfo, BoycottNews, Alternative } from './types';
-import CameraScanner from './components/CameraScanner';
+import { identifyAndCheckProduct, checkLatestBoycottNews, fetchMoreProducts, fetchMoreAlternatives } from './services/geminiService.ts';
+import { AppState, ProductInfo, BoycottNews, Alternative } from './types.ts';
+import CameraScanner from './components/CameraScanner.tsx';
 
 const UPDATE_CHECK_INTERVAL_DAYS = 7;
 const IMAGE_PLACEHOLDER = 'https://placehold.co/400x400/f8fafc/cbd5e1?text=%D9%84%D8%A7+%D8%AA%D9%88%D8%AC%D8%AF+%D8%B5%D9%88%D8%B1%D8%A9';
@@ -64,15 +64,19 @@ const App: React.FC = () => {
     if (savedCustom) setCustomProducts(JSON.parse(savedCustom));
 
     // Try to get location early
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => console.log('Location access denied or unavailable.', err)
-    );
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.log('Location access denied or unavailable.', err)
+      );
+    }
   }, []);
 
   const getCurrentLocation = (): Promise<{ lat: number, lng: number } | undefined> => {
     return new Promise((resolve) => {
       if (userLocation) return resolve(userLocation);
+      if (!("geolocation" in navigator)) return resolve(undefined);
+      
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
