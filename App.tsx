@@ -64,7 +64,7 @@ const App: React.FC = () => {
     if (savedCustom) setCustomProducts(JSON.parse(savedCustom));
 
     // Try to get location early
-    if ("geolocation" in navigator) {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         (err) => console.log('Location access denied or unavailable.', err)
@@ -75,7 +75,7 @@ const App: React.FC = () => {
   const getCurrentLocation = (): Promise<{ lat: number, lng: number } | undefined> => {
     return new Promise((resolve) => {
       if (userLocation) return resolve(userLocation);
-      if (!("geolocation" in navigator)) return resolve(undefined);
+      if (!navigator.geolocation) return resolve(undefined);
       
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -303,7 +303,7 @@ const App: React.FC = () => {
         {appState === AppState.IDLE && (
           <div className="space-y-12 animate-in fade-in duration-700">
             <section className="text-center">
-              <h2 className="text-4xl font-black text-slate-900 mb-4 leading-tight">تسوق بوعي.. <br/><span className="text-emerald-600">ادعم بلدك</span></h2>
+              <h2 className="text-4xl font-black text-slate-900 mb-4 leading-tight">تسوق بوعي.. <br/><span className="text-emerald-600">ادعم اخوتك</span></h2>
               <p className="text-slate-500 text-lg max-w-md mx-auto">دليلك الذكي للتعرف على المنتجات المقاطعة وإيجاد أفضل البدائل المحلية والعربية.</p>
             </section>
 
