@@ -1,0 +1,8 @@
+{
+  "name": "Badeelak - Ethical Shopping Assistant",
+  "description": "An Arabic application to find ethical alternatives to products that support the Israeli occupation. Scan a product or search by name to see boycott status and better options.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
