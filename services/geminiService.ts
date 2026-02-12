@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ProductInfo, BoycottNews, Alternative } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+// دالة مساعدة للحصول على كائن AI بشكل آمن عند الطلب فقط
+const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
 
 const PRODUCT_ITEM_SCHEMA = {
   type: Type.OBJECT,
@@ -39,14 +40,14 @@ const PRODUCT_ITEM_SCHEMA = {
             items: { type: Type.STRING }, 
             description: "أين نجد هذا البديل؟ (مثال: كارفور، المتاجر المحلية، الصيدليات)" 
           },
-          websiteUrl: { type: Type.STRING, description: "رابط الموقع الرسمي للمنتج البديل أو صفحته على متجر إلكتروني" },
-          mapsUrl: { type: Type.STRING, description: "رابط خرائط جوجل للمنتج إذا كان مطعماً أو مكاناً مادياً (يفضل أقرب فرع للمستخدم)" }
+          websiteUrl: { type: Type.STRING, description: "رابط الموقع الرسمي للمنتج البديل" },
+          mapsUrl: { type: Type.STRING, description: "رابط خرائط جوجل للمنتج البديل" }
         },
-        required: ["name", "origin", "manufacturer", "description", "imageUrl", "availabilityLocations"]
+        required: ["name", "origin", "manufacturer", "description", "imageUrl"]
       }
     }
   },
-  required: ["name", "brand", "category", "isBoycotted", "reason", "imageUrl", "alternatives", "availabilityLocations"]
+  required: ["name", "brand", "category", "isBoycotted", "reason", "imageUrl", "alternatives"]
 };
 
 const SEARCH_RESULTS_SCHEMA = {
@@ -89,9 +90,8 @@ const SYSTEM_INSTRUCTION = `
 لأقصى قدر من الفائدة:
 1. ابحث عن روابط صور حقيقية ومباشرة للمنتجات المقاطعة والبديلة.
 2. استخدم ميزة البحث (Google Search) للعثور على المواقع الرسمية (websiteUrl) للبدائل والروابط المكانية (mapsUrl).
-3. إذا تم توفير إحداثيات المستخدم، فاستخدمها للعثور على أقرب الفروع المكانية للبدائل على خرائط جوجل.
-4. حدد بدقة أين يمكن للمستخدم شراء المنتج الآمن أو البديل.
-5. كن دقيقاً جداً في سبب المقاطعة بناءً على حركة BDS.
+3. إذا تم توفير إحداثيات المستخدم، فاستخدمها للعثور على أقرب الفروع المتاحة للبدائل على خرائط جوجل.
+4. كن دقيقاً جداً في سبب المقاطعة بناءً على حركة BDS.
 الإجابة دائماً باللغة العربية.
 `;
 
@@ -99,6 +99,7 @@ export async function identifyAndCheckProduct(
   productNameOrImage: string | { base64: string, mimeType: string },
   location?: { lat: number, lng: number }
 ): Promise<ProductInfo[]> {
+  const ai = getAI();
   const isImage = typeof productNameOrImage !== 'string';
   const locationContext = location ? `موقعي الحالي هو (خط العرض: ${location.lat}, خط الطول: ${location.lng}). ابحث عن أقرب الفروع المتاحة لي للبدائل.` : "";
   
@@ -127,6 +128,7 @@ export async function identifyAndCheckProduct(
 }
 
 export async function fetchMoreProducts(query: string, existingCount: number, location?: { lat: number, lng: number }): Promise<ProductInfo[]> {
+  const ai = getAI();
   const locationContext = location ? `موقعي الحالي هو (${location.lat}, ${location.lng}).` : "";
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -143,6 +145,7 @@ export async function fetchMoreProducts(query: string, existingCount: number, lo
 }
 
 export async function fetchMoreAlternatives(brandName: string, location?: { lat: number, lng: number }): Promise<Alternative[]> {
+  const ai = getAI();
   const locationContext = location ? `موقعي الحالي هو (${location.lat}, ${location.lng}).` : "";
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -159,11 +162,12 @@ export async function fetchMoreAlternatives(brandName: string, location?: { lat:
 }
 
 export async function checkLatestBoycottNews(): Promise<BoycottNews> {
+  const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: "أحدث أخبار المقاطعة لشهر فبراير 2025 والشركات الجديدة.",
+    contents: "أحدث أخبار المقاطعة للشركات والبدائل الحالية.",
     config: {
-      systemInstruction: "مراقب حركة BDS.",
+      systemInstruction: "مراقب حركة BDS وداعم للبدائل الأخلاقية.",
       responseMimeType: "application/json",
       responseSchema: NEWS_SCHEMA,
       tools: [{ googleSearch: {} }]

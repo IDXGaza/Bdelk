@@ -63,7 +63,6 @@ const App: React.FC = () => {
     const savedCustom = localStorage.getItem('badeelak_custom_products');
     if (savedCustom) setCustomProducts(JSON.parse(savedCustom));
 
-    // Try to get location early
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
